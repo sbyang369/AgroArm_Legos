@@ -195,13 +195,15 @@ void loop()
     ei_printf("Anomaly prediction: %.3f\r\n", result.anomaly);
 #endif
 
-#if EI_CLASSIFIER_HAS_VISUAL_ANOMALY
-    ei_printf("Visual anomalies:\r\n");
-    for (uint32_t i = 0; i < result.visual_ad_count; i++) {
-        ei_impulse_result_bounding_box_t bb = result.visual_ad_grid_cells[i];
+// Inside your loop function, after running the classifier
+#if EI_CLASSIFIER_OBJECT_DETECTION == 1
+    ei_printf("Object detection bounding boxes:\r\n");
+    for (uint32_t i = 0; i < result.bounding_boxes_count; i++) {
+        ei_impulse_result_bounding_box_t bb = result.bounding_boxes[i];
         if (bb.value == 0) {
             continue;
         }
+
         ei_printf("  %s (%f) [ x: %u, y: %u, width: %u, height: %u ]\r\n",
                 bb.label,
                 bb.value,
@@ -209,10 +211,14 @@ void loop()
                 bb.y,
                 bb.width,
                 bb.height);
+
+        // Check if the detected object is "purple"
+        if (strcmp(bb.label, "purple") == 0) {
+            Serial.println("YAHOOOOOOOOOOOOOOOOOOOO!");
+        }
     }
+
 #endif
-
-
     free(snapshot_buf);
 
 }
