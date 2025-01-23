@@ -1,3 +1,14 @@
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+
+// Define SDA and SCL pins for I2C
+#define I2C_SDA 15
+#define I2C_SCL 14
+#define SERVOMIN 130
+#define SERVOMAX 540
+
+// Create an instance of the PCA9685 driver
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
 
 #include <AgroArm_Lego_Test_inferencing.h>
 #include "edge-impulse-sdk/dsp/image/image.hpp"
@@ -106,6 +117,8 @@ bool ei_camera_capture(uint32_t img_width, uint32_t img_height, uint8_t *out_buf
 void setup()
 {
     // put your setup code here, to run once:
+    pwm.begin();
+    pwm.setPWMFreq(60); 
     Serial.begin(115200);
     //comment out the below line to start inference immediately after upload
     while (!Serial);
@@ -214,8 +227,10 @@ void loop()
 
         // Check if the detected object is "purple"
         if (strcmp(bb.label, "purple") == 0) {
-            Serial.println("YAHOOOOOOOOOOOOOOOOOOOO!");
-        }
+          pwm.setPWM(0, 0, angleToPulse(0));
+          Serial.print("Purple detected, moving to intake position...");
+          delay(1000);
+        } 
     }
 
 #endif
@@ -359,6 +374,11 @@ static int ei_camera_get_data(size_t offset, size_t length, float *out_ptr)
     return 0;
 }
 
-#if !defined(EI_CLASSIFIER_SENSOR) || EI_CLASSIFIER_SENSOR != EI_CLASSIFIER_SENSOR_CAMERA
-#error "Invalid model for current sensor"
-#endif
+int angleToPulse(int ang) {
+  int pulse = map(ang, 0, 180, SERVOMIN, SERVOMAX);
+  Serial.print("Angle: ");
+  Serial.print(ang);
+  Serial.print(" pulse: ");
+  Serial.println(pulse);
+  return pulse;
+}
